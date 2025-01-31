@@ -92,7 +92,12 @@ const signin = async () => {
 
   try {
     // Making the API call to sign in the user
-    const response = await $apiCall("/auth/login", "POST", userCredentials);
+    const response = await $apiCall(
+      "/auth/login",
+      "POST",
+      userCredentials,
+      "include"
+    );
 
     if (response.status == "success") {
       router.push("/dashboard");
