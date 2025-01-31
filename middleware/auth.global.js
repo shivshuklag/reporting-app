@@ -20,7 +20,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
   }
 
   // If logged in and trying to access "/signin", redirect to dashboard
-  if (to.path === "/signin") {
+  if (to.path === "/signin" || to.path.includes("/signup")) {
     return navigateTo("/dashboard");
   }
 });
