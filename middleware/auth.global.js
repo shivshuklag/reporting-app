@@ -3,7 +3,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   // Prevent redirect loop by checking if already on the target page
   if (!token) {
-    if (to.path !== "/signin") {
+    if (to.path !== "/signin" && to.path !== "/signup" ) {
       return navigateTo("/signin");
     }
     return; // Stop further execution to prevent loops

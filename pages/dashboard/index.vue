@@ -1,45 +1,3 @@
-<script setup>
-import { ref, onMounted } from "vue";
-
-const checkins = ref([]);
-const showForm = ref(false);
-const checkinForm = ref({
-  yesterday: "",
-  today: "",
-  blockers: "",
-});
-
-const fetchCheckins = async () => {
-  // Fetch check-in data from API (mocked for now)
-  checkins.value = [
-    {
-      date: "2025-01-29",
-      yesterday: "Completed task A",
-      today: "Start task B",
-      blockers: "None",
-    },
-    {
-      date: "2025-01-28",
-      yesterday: "Reviewed PRs",
-      today: "Code refactoring",
-      blockers: "Need approval",
-    },
-  ];
-};
-
-const openCheckinForm = () => {
-  showForm.value = true;
-};
-
-const submitCheckin = () => {
-  // Submit the check-in (API integration needed)
-  console.log("Submitted Check-in", checkinForm.value);
-  showForm.value = false;
-};
-
-onMounted(fetchCheckins);
-</script>
-
 <template>
   <div class="container mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4">Check-ins</h1>
@@ -91,3 +49,46 @@ onMounted(fetchCheckins);
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+const checkins = ref([]);
+const showForm = ref(false);
+const checkinForm = ref({
+  yesterday: "",
+  today: "",
+  blockers: "",
+});
+definePageMeta({
+  layout:"menu"
+});
+const fetchCheckins = async () => {
+  // Fetch check-in data from API (mocked for now)
+  checkins.value = [
+    {
+      date: "2025-01-29",
+      yesterday: "Completed task A",
+      today: "Start task B",
+      blockers: "None",
+    },
+    {
+      date: "2025-01-28",
+      yesterday: "Reviewed PRs",
+      today: "Code refactoring",
+      blockers: "Need approval",
+    },
+  ];
+};
+
+const openCheckinForm = () => {
+  showForm.value = true;
+};
+
+const submitCheckin = () => {
+  // Submit the check-in (API integration needed)
+  console.log("Submitted Check-in", checkinForm.value);
+  showForm.value = false;
+};
+
+onMounted(fetchCheckins);
+</script>
