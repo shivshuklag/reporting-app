@@ -115,11 +115,9 @@ const updateProfile = async () => {
   console.log({ userDetails });
 
   try {
-    // Use the apiCall composable to make the PUT request to update the user profile
     const response = await $apiCall("/user/update", "POST", userDetails);
 
     if (response.status == "success") {
-      // Redirect to the dashboard after successful profile update
       router.push("/dashboard");
     } else {
       alert(response.message || "Failed to update profile.");
