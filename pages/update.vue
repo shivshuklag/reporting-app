@@ -59,7 +59,7 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from "vue";
+  import { ref } from "vue";
   import { useRouter } from "vue-router";
   const { $apiCall } = useNuxtApp();
   
@@ -74,37 +74,18 @@
     blocker: ""
   });
   
-  const fetchCheckinDetails = async () => {
-  try {
-    const response = await $apiCall(`/checkins/fetch`, "GET");
-    if (response && response.status === "success") {
-      console.log("checkinId:", checkinId);
-      console.log("checkins:", response.checkins);
-
-      const latestCheckin = response.checkins.find(checkin => checkin.id === String(checkinId));
-      if (latestCheckin) {
-        form.value = {
-          prev_day_work: latestCheckin.prev_day_work,
-          current_day_work: latestCheckin.current_day_work,
-          blocker: latestCheckin.blocker
-        };
-      } else {
-        throw new Error("Check-in not found");
-      }
-    } else {
-      throw new Error("Failed to fetch check-in details");
-    }
-  } catch (err) {
-    console.error("Error fetching check-in details:", err);
-    alert("Failed to fetch check-in details. Please try again.");
-  }
-};
   const handleUpdate = async () => {
     try {
-      const response = await $apiCall("/checkins/update", "PUT", {
-        id: checkinId,
-        ...form.value
+      // Ensure checkinId is a string
+      const checkinId = String(router.currentRoute.value.params.id);
+  
+      const response = await $apiCall("/checkins/update", "POST", {
+        checkin_id: checkinId, // Now explicitly a string
+        prev_day_work: form.value.prev_day_work,
+        current_day_work: form.value.current_day_work,
+        blocker: form.value.blocker
       });
+  
       if (response && response.status === "success") {
         alert("Check-in updated successfully!");
         router.push("/checkin");
@@ -120,10 +101,6 @@
   const cancelUpdate = () => {
     router.push("/checkin");
   };
-  
-  onMounted(() => {
-    fetchCheckinDetails();
-  });
   </script>
   
   <style scoped>

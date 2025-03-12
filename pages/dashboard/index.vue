@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <!-- Create Check-in Form -->
-    <div class="bg-gray shadow-lg rounded-2xl p-8 max-w-2xl mx-auto">
+    <!-- Create Check-in Form or Thank You Card -->
+    <div v-if="showForm" class="bg-gray shadow-lg rounded-2xl p-8 max-w-2xl mx-auto">
       <h2 class="text-xl font-semibold mb-4">Create a New Check-in</h2>
       
       <div class="space-y-4">
@@ -29,21 +29,18 @@
         Submit Check-in
       </button>
     </div>
-
-    <!-- Thank You Modal -->
-    <div v-if="showThankYouModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-        <h2 class="text-xl font-semibold mb-4">Thank You!</h2>
-        <p>Your check-in has been recorded successfully.</p>
-        <button @click="closeThankYouModal" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          Close
-        </button>
+    <div v-else class="bg-gray-800 shadow-lg rounded-2xl p-8 max-w-2xl mx-auto text-center">
+      <div class="mb-4">
+        <svg class="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
       </div>
+      <h2 class="text-2xl font-bold mb-4 text-gray-100">Thank You!</h2>
+      <p class="text-gray-300 mb-6">Your check-in has been recorded successfully.</p>
     </div>
 
-    <!-- Update Check-in Link -->
     <div class="text-center mt-6">
-      <NuxtLink to="/update" class="text-black-800 hover:underline flex items-center justify-center">
+      <NuxtLink to="/checkin" class="text-black-800 hover:underline flex items-center justify-center">
         <svg class="w-5 h-5 mr-2 text-blue-600" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M17.414 2.586a2 2 0 00-2.828 0L3 14.172V17h2.828l11.586-11.586a2 2 0 000-2.828zM5 15H4v-1l10.586-10.586 1 1L5 15z" clip-rule="evenodd"></path>
         </svg>
@@ -62,6 +59,7 @@ definePageMeta({ layout: "menu" });
 const checkinForm = ref({ prev_day_work: "", current_day_work: "", blocker: "" });
 const showThankYouModal = ref(false);
 const loading = ref(false);
+const showForm = ref(true);
 
 // Submit a new check-in
 const submitCheckin = async () => {
@@ -75,7 +73,12 @@ const submitCheckin = async () => {
     if (response.status === "success") {
       checkinForm.value = { prev_day_work: "", current_day_work: "", blocker: "" };
       showThankYouModal.value = true;
-      localStorage.setItem("thankYouModalShown", "true");
+
+      // After successful check-in, call the status API to check if the form should be hidden
+      const statusResponse = await $apiCall("/checkins/status", "GET");
+      if (statusResponse.status === "success") {
+        showForm.value = false; // Hide the form if the status is "success"
+      }
     }
   } catch (error) {
     console.error("Error submitting check-in:", error);
@@ -87,11 +90,23 @@ const submitCheckin = async () => {
 // Close the Thank You Modal
 const closeThankYouModal = () => {
   showThankYouModal.value = false;
-  localStorage.removeItem("thankYouModalShown");
 };
 
-// Check if the Thank You Modal should be shown after refresh
+// Check the status of the check-in on component mount
+const checkCheckinStatus = async () => {
+  try {
+    const statusResponse = await $apiCall("/checkins/status", "GET");
+    if (statusResponse.status === "success") {
+      showForm.value = false; // Hide the form if the status is "success"
+    }
+  } catch (error) {
+    console.error("Error fetching check-in status:", error);
+  }
+};
+
+// Check the check-in status on component mount
 onMounted(() => {
+  checkCheckinStatus();
   if (localStorage.getItem("thankYouModalShown")) {
     showThankYouModal.value = true;
   }

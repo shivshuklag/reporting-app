@@ -1,6 +1,7 @@
 <template>
   <div class="p-6 flex justify-center items-center min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
     <div class="w-full max-w-4xl p-6 bg-gray-800 rounded-2xl shadow-lg text-white">
+      <!-- Filter and Download Buttons -->
       <div class="flex justify-between mb-4">
         <input type="date" v-model="startDate" class="px-4 py-2 bg-gray-700 text-white rounded-lg" />
         <input type="date" v-model="endDate" class="px-4 py-2 bg-gray-700 text-white rounded-lg" />
@@ -9,10 +10,33 @@
         <button @click="downloadCSV" class="px-4 py-2 bg-sky-500/40 text-white rounded-lg hover:bg-sky-500/20">Download CSV</button>
       </div>
 
+      <!-- Loading and Error States -->
       <div v-if="loading" class="text-center">Loading check-ins...</div>
       <div v-if="error" class="text-center text-red-400">{{ error }}</div>
 
+      <!-- Check-in List -->
       <div v-if="!loading && !error">
+        <!-- Edit Latest Check-in Form -->
+        <div v-if="isCheckinEditable && latestCheckin" class="p-4 bg-gray-700 rounded-lg mb-4">
+          <h3 class="text-lg font-semibold mb-4">Edit Latest Check-in</h3>
+          <form @submit.prevent="updateCheckin">
+            <div class="mb-4">
+              <label class="block text-gray-400 mb-2">Yesterday's Work</label>
+              <input v-model="form.prev_day_work" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-400 mb-2">Today's Plan</label>
+              <input v-model="form.current_day_work" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-400 mb-2">Blockers</label>
+              <input v-model="form.blocker" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg" />
+            </div>
+            <button type="submit" class="px-4 py-2 bg-sky-500/40 text-white rounded-lg hover:bg-sky-500/20">Update Check-in</button>
+          </form>
+        </div>
+
+        <!-- Display Check-ins -->
         <div v-for="checkin in paginatedCheckins" :key="checkin.id" class="p-4 bg-gray-700 rounded-lg mb-4">
           <div class="flex justify-between items-center">
             <div>
@@ -53,7 +77,30 @@ const currentPage = ref(1);
 const itemsPerPage = 5;
 const startDate = ref("");
 const endDate = ref("");
+const isCheckinEditable = ref(false);
 
+const form = ref({
+  prev_day_work: "",
+  current_day_work: "",
+  blocker: "",
+});
+
+const latestCheckin = computed(() => {
+  if (filteredCheckins.value.length > 0) {
+    return filteredCheckins.value[0]; // Assuming the latest check-in is the first one
+  }
+  return null;
+});
+
+watch(latestCheckin, (newCheckin) => {
+  if (newCheckin) {
+    form.value = {
+      prev_day_work: newCheckin.prev_day_work,
+      current_day_work: newCheckin.current_day_work,
+      blocker: newCheckin.blocker,
+    };
+  }
+});
 const fetchCheckins = async () => {
   loading.value = true;
   error.value = null;
@@ -61,7 +108,7 @@ const fetchCheckins = async () => {
     const response = await $apiCall("/checkins/fetch", "GET");
     if (response && response.status === "success") {
       checkins.value = response.checkins;
-      filteredCheckins.value = checkins.value; // Default: No filters applied
+      filteredCheckins.value = checkins.value;
     } else {
       throw new Error("Failed to fetch check-ins");
     }
@@ -71,6 +118,49 @@ const fetchCheckins = async () => {
     loading.value = false;
   }
 };
+const fetchCheckinStatus = async () => {
+  try {
+    const response = await $apiCall("/checkins/status", "GET");
+    if (response && response.status === "success") {
+      isCheckinEditable.value = true;
+    } else {
+      isCheckinEditable.value = false;
+    }
+  } catch (err) {
+    console.error("Error fetching check-in status:", err);
+    isCheckinEditable.value = false;
+  }
+};
+const updateCheckin = async () => {
+  if (!latestCheckin.value) return;
+
+  try {
+    const response = await $apiCall("/checkins/update", "POST", {
+      checkin_id: latestCheckin.value.id,
+      prev_day_work: form.value.prev_day_work,
+      current_day_work: form.value.current_day_work,
+      blocker: form.value.blocker,
+    });
+
+    if (response && response.status === "success") {
+      const updatedCheckinIndex = checkins.value.findIndex(
+        (c) => c.id === latestCheckin.value.id
+      );
+      if (updatedCheckinIndex !== -1) {
+        checkins.value[updatedCheckinIndex] = {
+          ...latestCheckin.value,
+          ...form.value,
+        };
+      }
+      alert("Check-in updated successfully!");
+    } else {
+      throw new Error("Failed to update check-in");
+    }
+  } catch (err) {
+    error.value = err.message || "Failed to update check-in.";
+  }
+};
+
 
 const filterCheckins = () => {
   if (!startDate.value || !endDate.value) {
@@ -78,7 +168,7 @@ const filterCheckins = () => {
   } else {
     const start = new Date(startDate.value);
     const end = new Date(endDate.value);
-    end.setHours(23, 59, 59, 999); // Ensure the end date includes the full day
+    end.setHours(23, 59, 59, 999);
 
     filteredCheckins.value = checkins.value.filter(checkin => {
       const checkinDate = new Date(checkin.created_at);
@@ -142,6 +232,7 @@ const downloadCSV = () => {
 
 onMounted(() => {
   fetchCheckins();
+  fetchCheckinStatus(); // Fetch check-in status on component mount
 });
 </script>
 

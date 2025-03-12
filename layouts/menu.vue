@@ -13,14 +13,14 @@
               <span>Home</span>
             </NuxtLink>
           </li>
-          <NuxtLink to="/update" class="flex items-center p-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+          <!-- <NuxtLink to="/update" class="flex items-center p-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <BookOpenIcon class="h-5 w-5 mr-3" />
               <span>Update Checkin</span>
-            </NuxtLink>
+            </NuxtLink> -->
           <li>
             <NuxtLink to="/checkin" class="flex items-center p-3 text-gray-700 hover:bg-gray-100 rounded-lg">
               <QuestionMarkCircleIcon class="h-5 w-5 mr-3" />
-              <span>Checkin</span>
+              <span>Checkin / UpdateCheckin</span>
             </NuxtLink>
           </li>
           <li>
